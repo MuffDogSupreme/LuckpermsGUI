@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="modrinth/icon.svg" width="96" height="96" alt="LuckpermsGUI icon" />
-</p>
-
 <h1 align="center">LuckpermsGUI</h1>
 
 <p align="center">

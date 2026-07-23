@@ -8,3 +8,11 @@ target/
 
 # OS
 Thumbs.db
+
+# Public-facing assets kept locally but not in this repo - website, wiki content, Modrinth
+# submission prep, and deploy config. Compiled release jars belong on GitHub Releases, not here.
+/luckpermsgui.muffdev.xyz/
+/wiki-content/
+/modrinth/
+/deploy/
+/dist/
