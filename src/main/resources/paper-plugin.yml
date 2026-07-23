@@ -1,0 +1,19 @@
+name: LuckpermsGUI
+version: '1.0.0'
+main: com.luckpermsgui.LuckpermsGUI
+api-version: '1.20'
+description: Administrative GUI and command interface for LuckPerms.
+author: LuckpermsGUI
+website: https://github.com/
+
+dependencies:
+  server:
+    LuckPerms:
+      load: BEFORE
+      required: true
+      join-classpath: true
+
+permissions:
+  luckpermsgui.admin:
+    description: Grants access to all /lpgui commands and the permission editor GUI.
+    default: op

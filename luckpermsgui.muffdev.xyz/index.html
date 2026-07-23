@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LuckpermsGUI — Chest-GUI Admin Panel for LuckPerms</title>
+<meta name="description" content="LuckpermsGUI is a standalone Paper plugin that puts LuckPerms permission, group, and track management inside in-game chest menus — no more memorizing /lp command syntax." />
+<meta property="og:title" content="LuckpermsGUI — Chest-GUI Admin Panel for LuckPerms" />
+<meta property="og:description" content="A standalone Paper plugin: manage LuckPerms users, groups, tracks, contexts, and the audit log entirely through in-game chest menus." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://luckpermsgui.muffdev.xyz/" />
+<meta name="theme-color" content="#9c6b1f" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%231a1d23'/%3E%3Ccircle cx='38' cy='42' r='16' fill='none' stroke='%239c6b1f' stroke-width='7'/%3E%3Crect x='50' y='55' width='34' height='9' fill='%239c6b1f'/%3E%3Crect x='68' y='55' width='9' height='20' fill='%239c6b1f'/%3E%3C/svg%3E" />
+<style>
+  :root {
+    --paper: #eef0f2;
+    --surface: #ffffff;
+    --surface-2: #e4e7eb;
+    --ink: #1a1d23;
+    --ink-soft: #5b6470;
+    --ink-faint: #838d99;
+    --line: #d3d8de;
+    --brass: #9c6b1f;
+    --brass-deep: #7a5216;
+    --brass-wash: #f2e6d3;
+    --ok: #2e7d4f;
+    --ok-wash: #e3f1e8;
+    --neg: #b23a3a;
+    --neg-wash: #f6e4e3;
+    --neutral-chip: #6b7280;
+    --neutral-wash: #e8e9eb;
+    --code-bg: #1a1d23;
+    --code-ink: #e7e5e0;
+    --shadow: 0 1px 2px rgba(20,23,27,0.06), 0 4px 16px rgba(20,23,27,0.05);
+    --radius: 10px;
+    --serif: Georgia, "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", "Consolas", "Liberation Mono", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #14171b; --surface: #1c2027; --surface-2: #262b33;
+      --ink: #e7e5e0; --ink-soft: #9aa3ad; --ink-faint: #6b7480; --line: #333941;
+      --brass: #d9a441; --brass-deep: #f0bc63; --brass-wash: #3a2e17;
+      --ok: #4caf6d; --ok-wash: #16281d; --neg: #e0635f; --neg-wash: #2f1c1b;
+      --neutral-chip: #8a93a0; --neutral-wash: #262b33;
+      --code-bg: #0f1115; --code-ink: #e7e5e0;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans);
+    font-size: 16px; line-height: 1.6;
+  }
+  main { max-width: 920px; margin: 0 auto; padding: 0 24px 96px; }
+  .skip-link {
+    position: absolute; left: -999px; top: 0; background: var(--brass); color: #fff;
+    padding: 10px 16px; border-radius: 0 0 8px 0; z-index: 100;
+  }
+  .skip-link:focus { left: 0; }
+
+  h1, h2, h3, h4 { font-family: var(--serif); font-weight: 700; text-wrap: balance; color: var(--ink); }
+  h1 { font-size: 2.6rem; letter-spacing: -0.01em; margin: 0 0 10px; }
+  h2 { font-size: 1.55rem; margin: 0 0 4px; border-top: 1px solid var(--line); padding-top: 42px; }
+  h2 .num { color: var(--brass); font-variant-numeric: tabular-nums; margin-right: 10px; font-size: 1.05rem; font-family: var(--mono); }
+  h3 { font-size: 1.12rem; margin: 26px 0 10px; }
+  p { margin: 0 0 14px; max-width: 68ch; }
+  .lede { color: var(--ink-soft); font-size: 1.14rem; max-width: 58ch; }
+  a { color: var(--brass-deep); text-decoration: underline; text-decoration-color: var(--brass-wash); text-underline-offset: 2px; }
+  a:hover { color: var(--brass); }
+  a:focus-visible, button:focus-visible, .btn:focus-visible {
+    outline: 2px solid var(--brass); outline-offset: 2px; border-radius: 4px;
+  }
+  code { font-family: var(--mono); background: var(--surface-2); padding: 1px 6px; border-radius: 4px; font-size: 0.88em; }
+  pre code { background: none; padding: 0; }
+  strong { color: var(--ink); }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    background: linear-gradient(180deg, var(--surface) 0%, var(--paper) 100%);
+    border-bottom: 1px solid var(--line);
+    padding: 72px 24px 48px;
+  }
+  .hero-inner { max-width: 920px; margin: 0 auto; }
+  .eyebrow {
+    font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--brass); margin: 0 0 16px; display: flex; align-items: center; gap: 10px;
+  }
+  .eyebrow::before { content: ""; width: 22px; height: 1px; background: var(--brass); display: inline-block; }
+  .slotstrip { display: flex; gap: 6px; margin: 26px 0 24px; }
+  .slotstrip .s {
+    width: 44px; height: 44px; border-radius: 7px; background: var(--surface-2); border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center; font-size: 1.2rem; box-shadow: var(--shadow);
+  }
+  .factrow {
+    display: flex; flex-wrap: wrap; gap: 10px 26px; margin: 22px 0 30px;
+    font-family: var(--mono); font-size: 0.86rem; color: var(--ink-soft);
+  }
+  .factrow strong { color: var(--ink); font-weight: 600; }
+  .herobtns { display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn {
+    display: inline-block; font-family: var(--sans); font-weight: 600; font-size: 0.95rem;
+    padding: 12px 22px; border-radius: 8px; text-decoration: none; border: 1px solid transparent;
+  }
+  .btn-primary { background: var(--brass); color: #fff; }
+  .btn-primary:hover { background: var(--brass-deep); color: #fff; }
+  .btn-secondary { background: transparent; color: var(--ink); border-color: var(--line); }
+  .btn-secondary:hover { border-color: var(--ink-faint); }
+
+  /* ---------- Sticky nav ---------- */
+  .topnav {
+    position: sticky; top: 0; z-index: 20;
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  .topnav-inner {
+    max-width: 920px; margin: 0 auto; padding: 0 24px;
+    display: flex; gap: 4px; overflow-x: auto;
+  }
+  .navlink {
+    flex: none; padding: 13px 12px; font-size: 0.86rem; color: var(--ink-soft);
+    text-decoration: none; white-space: nowrap;
+  }
+  .navlink:hover { color: var(--ink); }
+
+  /* ---------- Cards ---------- */
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin: 18px 0 8px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 18px 20px; box-shadow: var(--shadow);
+  }
+  .card h4 { margin: 0 0 6px; font-size: 1.02rem; }
+  .card ul { margin: 8px 0 0; padding-left: 18px; }
+  .card li { margin-bottom: 5px; color: var(--ink-soft); font-size: 0.94rem; }
+  .card li strong { color: var(--ink); }
+
+  /* ---------- Tables ---------- */
+  .tablewrap { overflow-x: auto; margin: 14px 0 24px; border: 1px solid var(--line); border-radius: var(--radius); }
+  table { border-collapse: collapse; width: 100%; min-width: 520px; font-size: 0.92rem; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th {
+    font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--ink-faint); background: var(--surface-2); white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+
+  /* ---------- Chips ---------- */
+  .chip {
+    display: inline-block; font-family: var(--mono); font-size: 0.78rem; padding: 2px 9px;
+    border-radius: 999px; font-weight: 600;
+  }
+  .chip-ok { background: var(--ok-wash); color: var(--ok); }
+  .chip-neg { background: var(--neg-wash); color: var(--neg); }
+  .chip-neutral { background: var(--neutral-wash); color: var(--neutral-chip); }
+
+  /* ---------- Steps ---------- */
+  .steps { counter-reset: step; margin: 18px 0 26px; padding: 0; list-style: none; }
+  .steps li {
+    counter-increment: step; position: relative; padding: 2px 0 18px 46px; font-size: 0.96rem; color: var(--ink-soft);
+  }
+  .steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 0; width: 28px; height: 28px;
+    background: var(--brass); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 0.82rem; font-weight: 700;
+  }
+  .steps li strong { color: var(--ink); }
+
+  /* ---------- Limitations ---------- */
+  .limlist { list-style: none; margin: 14px 0 26px; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+  .limlist li {
+    background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--brass);
+    border-radius: 0 8px 8px 0; padding: 12px 16px; font-size: 0.94rem; color: var(--ink-soft);
+  }
+  .limlist li strong { color: var(--ink); }
+
+  /* ---------- CTA ---------- */
+  .cta {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 32px; text-align: center; margin: 20px 0 8px; box-shadow: var(--shadow);
+  }
+  .cta h3 { margin-top: 0; }
+  .placeholder-note {
+    font-family: var(--mono); font-size: 0.78rem; color: var(--neg); background: var(--neg-wash);
+    border-radius: 6px; padding: 8px 12px; display: inline-block; margin-top: 14px;
+  }
+
+  footer { border-top: 1px solid var(--line); margin-top: 40px; padding: 28px 24px 60px; }
+  footer .foot-inner {
+    max-width: 920px; margin: 0 auto; display: flex; justify-content: space-between; flex-wrap: wrap;
+    gap: 12px; font-size: 0.84rem; color: var(--ink-faint);
+  }
+
+  @media (max-width: 640px) {
+    h1 { font-size: 1.9rem; }
+    .hero { padding: 48px 18px 32px; }
+    main { padding: 0 16px 80px; }
+  }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<div class="hero">
+  <div class="hero-inner">
+    <p class="eyebrow">Standalone Paper Plugin</p>
+    <h1>LuckpermsGUI</h1>
+    <p class="lede">Manage LuckPerms users, groups, tracks, contexts, and the audit log entirely through
+    in-game chest menus. No more memorizing <code>/lp</code> command syntax to change a rank or add a
+    permission.</p>
+    <div class="slotstrip" aria-hidden="true">
+      <div class="s">👤</div><div class="s">🏷️</div><div class="s">🪜</div>
+      <div class="s">🧭</div><div class="s">📖</div><div class="s">🛠️</div>
+    </div>
+    <div class="factrow">
+      <span><strong>Requires</strong> LuckPerms</span>
+      <span><strong>Server</strong> Paper 1.20.6+</span>
+      <span><strong>Java</strong> 21</span>
+      <span><strong>Dependencies</strong> none besides LuckPerms</span>
+    </div>
+    <div class="herobtns">
+      <a class="btn btn-primary" href="#get-it">Get the Plugin</a>
+      <a class="btn btn-secondary" href="#features">See What It Does</a>
+    </div>
+  </div>
+</div>
+
+<nav class="topnav" aria-label="Section navigation">
+  <div class="topnav-inner">
+    <a class="navlink" href="#overview">Overview</a>
+    <a class="navlink" href="#features">Features</a>
+    <a class="navlink" href="#install">Install</a>
+    <a class="navlink" href="#commands">Commands</a>
+    <a class="navlink" href="#syntax">Syntax</a>
+    <a class="navlink" href="#model">How It Works</a>
+    <a class="navlink" href="#limits">Limitations</a>
+    <a class="navlink" href="#craft">Built With Care</a>
+    <a class="navlink" href="#get-it">Get It</a>
+  </div>
+</nav>
+
+<main id="main">
+
+  <section id="overview">
+    <h2><span class="num">01</span>Overview</h2>
+    <p>LuckpermsGUI is a permission, group, and track editor that lives entirely inside chest inventories.
+    It's built specifically for server admins and staff who'd rather click through a menu than remember
+    exact <code>/lp</code> subcommand syntax — while still doing everything through LuckPerms' own public
+    API, so nothing it does is invisible to LuckPerms itself.</p>
+    <p>Every change you make — toggling a permission, reordering a promotion ladder, setting a group's
+    prefix — is written back through the same load-then-save path LuckPerms uses internally, and is logged
+    to LuckPerms' own action log. Run <code>/lp log</code> afterward and changes made through this GUI look
+    identical to changes made through LuckPerms' own commands.</p>
+  </section>
+
+  <section id="features">
+    <h2><span class="num">02</span>What It Does</h2>
+    <div class="card-grid">
+
+      <div class="card">
+        <h4>Launcher</h4>
+        <p style="margin:0;color:var(--ink-soft);font-size:0.94rem;">One command, <code>/lpgui</code>, opens
+        a hub with six tiles: Users, Groups, Tracks, Contexts, Action Log, System Tools.</p>
+      </div>
+
+      <div class="card">
+        <h4>Users</h4>
+        <ul>
+          <li><strong>Directory</strong> — browse or search every player LuckPerms knows about, online or not</li>
+          <li><strong>Dashboard</strong> — groups, primary group, promote/demote along a track</li>
+          <li><strong>Permission Nodes</strong> — toggle, remove, or add nodes with an optional expiry and a context restriction</li>
+          <li><strong>Meta Keys</strong> — custom key/value data (ranks, placeholders, whatever your other plugins read)</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h4>Groups</h4>
+        <ul>
+          <li>Create, delete, and browse every group on the server</li>
+          <li>Weight, prefix, suffix, and display name, all editable in a couple of clicks</li>
+          <li>Parent groups and the exact same permission-node editor as Users</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h4>Tracks</h4>
+        <ul>
+          <li>Build promotion ladders visually — add groups in order, delete when done with one</li>
+          <li>Reorder by clicking the group you want to move, then clicking where it should go</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h4>Contexts</h4>
+        <ul>
+          <li>See the server's static context and any online player's currently active context set</li>
+          <li>Read-only — a diagnostic view, not an editor</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h4>Action Log</h4>
+        <ul>
+          <li>Browse the LuckPerms audit trail without leaving the GUI</li>
+          <li>Filter by actor or target name; force-refresh when you need the very latest entry</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h4>System Tools</h4>
+        <ul>
+          <li>Sync permissions across your network in one click</li>
+          <li>Jump straight into LuckPerms' own web editor</li>
+          <li>Purge locally cached permission data after a bulk change</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <section id="install">
+    <h2><span class="num">03</span>Requirements &amp; Installation</h2>
+    <p><strong>You need:</strong> a Paper server (or a Paper-based fork) on Minecraft's Java 21 runtime,
+    running Paper build 1.20.6 or newer, with LuckPerms already installed and working.</p>
+    <ol class="steps">
+      <li>Drop the plugin jar into your server's <code>plugins/</code> folder.</li>
+      <li>Make sure LuckPerms is in the same folder — LuckpermsGUI won't start without it, and will tell
+      you clearly in the console if it can't find it.</li>
+      <li>Restart the server (a plugin reload isn't enough for a fresh install).</li>
+      <li>Grant <code>luckpermsgui.admin</code> to whichever staff should have access — it defaults to
+      operators only.</li>
+      <li>Run <code>/lpgui</code> in-game to open the Launcher.</li>
+    </ol>
+  </section>
+
+  <section id="commands">
+    <h2><span class="num">04</span>Commands</h2>
+    <p>Base command <code>/lpgui</code>, aliases <code>/lpg</code> and <code>/luckpermsgui</code>.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Command</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr><td><code>/lpgui</code></td><td>Opens the Launcher GUI</td></tr>
+          <tr><td><code>/lpgui open [player]</code></td><td>Jumps straight to a player's dashboard</td></tr>
+          <tr><td><code>/lpgui setgroup &lt;player&gt; &lt;group&gt;</code></td><td>Sets a player's primary group</td></tr>
+          <tr><td><code>/lpgui addperm &lt;player&gt; &lt;permission&gt;</code></td><td>Adds a permission node</td></tr>
+          <tr><td><code>/lpgui removeperm &lt;player&gt; &lt;permission&gt;</code></td><td>Removes a permission node</td></tr>
+          <tr><td><code>/lpgui help</code></td><td>Shows command usage as chat text</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="syntax">
+    <h2><span class="num">05</span>Chat Input Syntax</h2>
+    <p>Chest inventories can't take multi-field forms, so anywhere the GUI needs more than one value, it
+    takes a single compact line typed in chat. Type <code>cancel</code>, or click the Cancel link, to back
+    out — every prompt also times out after 30 seconds on its own.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Where</th><th>Type</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td>Add permission</td><td><code>key [true|false] [duration] [context=value]</code></td><td><code>essentials.fly false 7d world=nether</code></td></tr>
+          <tr><td>Add a group</td><td><code>group-name [duration]</code></td><td><code>vip 30d</code></td></tr>
+          <tr><td>Add meta key</td><td><code>key value</code></td><td><code>guild Frostbite Raiders</code></td></tr>
+          <tr><td>Durations</td><td><code>30s · 10m · 2h · 7d · 4w · 6mo · 1y</code></td><td>one number, one unit</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Only the first value is ever required — everything else is optional.</p>
+  </section>
+
+  <section id="model">
+    <h2><span class="num">06</span>How It Works</h2>
+    <p>Every permission node is one of exactly three states — nothing invented, this is just how LuckPerms
+    itself stores permissions:</p>
+    <p>
+      <span class="chip chip-ok">True</span> &nbsp;granted &nbsp;&middot;&nbsp;
+      <span class="chip chip-neg">Negated</span> &nbsp;explicitly denied &nbsp;&middot;&nbsp;
+      <span class="chip chip-neutral">Unset</span> &nbsp;no node at all
+    </p>
+    <p>Left-click a permission to flip True/Negated; right-click to unset it. The same rule holds
+    everywhere in the GUI: <strong>right-click generally means remove, left-click generally means toggle
+    or select.</strong> Every paginated list uses the same bottom row too, so once you've used one screen
+    you've used them all — page controls in the middle, and the very last slot is always either Back (if
+    you navigated in from somewhere) or Exit (if this is where your session started).</p>
+  </section>
+
+  <section id="limits">
+    <h2><span class="num">07</span>Limitations, Honestly</h2>
+    <ul class="limlist">
+      <li><strong>Paper 1.20.6+ only</strong> — the plugin uses Paper's modern command registration API,
+      which doesn't exist on 1.20.4 or earlier.</li>
+      <li><strong>One context restriction per permission node</strong>, not an arbitrary set.</li>
+      <li><strong>Prefix and suffix priority is fixed</strong> when set through the GUI — setting a new one
+      replaces any existing one rather than stacking multiple priorities.</li>
+      <li><strong>Group deletion doesn't hard-block</strong> on "this is someone's primary group" — that
+      would require scanning every stored player. The dashboard shows track membership before you delete,
+      and deletion always needs two clicks, but there's no automatic prevention.</li>
+      <li><strong>Meta values can't carry an expiry through the simple chat syntax</strong> — a value can
+      contain almost anything, including something that looks like a duration, so the plugin doesn't try to
+      guess.</li>
+      <li><strong>The action log has no server-side search</strong> — LuckPerms' own API returns the whole
+      log at once, so filtering happens locally against a copy that refreshes at most every 45 seconds.</li>
+    </ul>
+  </section>
+
+  <section id="craft">
+    <h2><span class="num">08</span>Built With Care</h2>
+    <p>Every LuckPerms API call this plugin makes was checked against the real, compiled API — not assumed
+    from memory — before being written into the plugin. Two real interaction bugs were caught and fixed
+    before release by tracing through concrete examples rather than trusting the first version that
+    compiled: an off-by-one in the track-reordering math, and a rare case where a late chat response could
+    reopen a stale menu on top of whatever a player had already navigated to. Every LuckPerms call runs
+    off the main server thread, with results always hopped back before touching an inventory or sending a
+    message, so nothing here can freeze your server waiting on permission data.</p>
+  </section>
+
+  <section id="get-it">
+    <h2><span class="num">09</span>Get LuckpermsGUI</h2>
+    <div class="cta">
+      <h3>Ready to try it?</h3>
+      <p style="max-width:52ch;margin:0 auto;">Drop it into your <code>plugins/</code> folder alongside
+      LuckPerms and run <code>/lpgui</code>.</p>
+      <p style="margin-top:18px;"><a class="btn btn-primary" href="#">Download Latest Release</a></p>
+      <div class="placeholder-note">⚠ Placeholder link — replace this href with your actual release/repo URL before publishing.</div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="foot-inner">
+    <span>LuckpermsGUI &middot; a standalone administrative front end for LuckPerms</span>
+    <span>Not affiliated with the LuckPerms project</span>
+  </div>
+</footer>
+
+</body>
+</html>
