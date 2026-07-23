@@ -1,0 +1,2 @@
+# LuckpermsGUI
+A chest-GUI administrative front end for LuckPerms — manage users, groups, tracks, contexts, and the audit log without memorizing /lp command syntax.
